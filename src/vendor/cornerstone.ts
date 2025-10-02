@@ -4,8 +4,8 @@ import {
   setVolumesForViewports,
   volumeLoader,
   utilities,
+  Types,
 } from '@cornerstonejs/core';
-import { PublicViewportInput } from '@cornerstonejs/core/dist/esm/types';
 import cornerstoneDICOMImageLoader, { init as dicomImageLoaderInit } from '@cornerstonejs/dicom-image-loader';
 import { MedTechPanelState } from 'types';
 import { convertMultiframeImageIds } from './convertMultiframeImageIds';
@@ -19,8 +19,18 @@ import { getWadoRsUrl } from 'utils/wadoRsUrl';
 import { MODALITY, SOP_INSTANCE_UID } from '../constants';
 const { DicomMetaDictionary } = dcmjs.data;
 const { calibratedPixelSpacingMetadataProvider, getPixelSpacingInformation } = utilities;
+import * as cornerstoneTools from '@cornerstonejs/tools';
+const {
+  PanTool,
+  WindowLevelTool,
+  StackScrollTool,
+  ZoomTool,
+  PlanarRotateTool,
+  ToolGroupManager,
+  Enums: csToolsEnums,
+} = cornerstoneTools;
 
-const RENDERING_ENGINE_ID = 'grafana-medtech-panel-engine';
+const RENDERING_ENGINE_ID = 'grafana-health-dicom-engine';
 let renderingEngine: RenderingEngine | null = null;
 let promise: Promise<RenderingEngine> | null = null;
 
@@ -32,6 +42,12 @@ const init = async (): Promise<RenderingEngine> => {
   promise = new Promise(async (resolve) => {
     await coreInit();
     await dicomImageLoaderInit();
+    await cornerstoneTools.init();
+    cornerstoneTools.addTool(PanTool);
+    cornerstoneTools.addTool(WindowLevelTool);
+    cornerstoneTools.addTool(StackScrollTool);
+    cornerstoneTools.addTool(ZoomTool);
+    cornerstoneTools.addTool(PlanarRotateTool);
 
     renderingEngine = new RenderingEngine(RENDERING_ENGINE_ID);
     resolve(renderingEngine);
@@ -40,9 +56,9 @@ const init = async (): Promise<RenderingEngine> => {
   return promise;
 };
 
-const viewportInputs: Record<string, PublicViewportInput[]> = {};
+const viewportInputs: Record<string, Types.PublicViewportInput[]> = {};
 
-export const setViewPort = async (state: Partial<MedTechPanelState>, viewportInput: PublicViewportInput) => {
+export const setViewPort = async (state: Partial<MedTechPanelState>, viewportInput: Types.PublicViewportInput) => {
   const { apiUrl, instances, seriesInstanceUID, studyInstanceUID, orientation } = state;
   if (!instances?.length) {
     return;
@@ -147,6 +163,60 @@ export const setViewPort = async (state: Partial<MedTechPanelState>, viewportInp
     volume.load();
   }
 
+  let toolGroup = ToolGroupManager.getToolGroupForViewport(viewportId);
+  if (!toolGroup) {
+    toolGroup = ToolGroupManager.createToolGroup(viewportId);
+  }
+
+  toolGroup!.addTool(WindowLevelTool.toolName);
+  toolGroup!.addTool(PanTool.toolName);
+  toolGroup!.addTool(ZoomTool.toolName);
+  toolGroup!.addTool(StackScrollTool.toolName, { loop: false });
+  toolGroup!.addTool(PlanarRotateTool.toolName);
+
+  toolGroup!.setToolActive(WindowLevelTool.toolName, {
+    bindings: [
+      {
+        mouseButton: csToolsEnums.MouseBindings.Primary, // Left Click
+      },
+    ],
+  });
+  toolGroup!.setToolActive(PanTool.toolName, {
+    bindings: [
+      {
+        mouseButton: csToolsEnums.MouseBindings.Auxiliary, // Middle Click
+      },
+    ],
+  });
+  toolGroup!.setToolActive(ZoomTool.toolName, {
+    bindings: [
+      {
+        mouseButton: csToolsEnums.MouseBindings.Secondary, // Right Click
+      },
+    ],
+  });
+
+  // The Stack Scroll mouse wheel is a tool using the `mouseWheelCallback`
+  // and needs to be registered against the 'Wheel' binding.
+  toolGroup!.setToolActive(StackScrollTool.toolName, {
+    bindings: [
+      {
+        mouseButton: csToolsEnums.MouseBindings.Wheel, // Wheel Mouse
+      },
+    ],
+  });
+  toolGroup!.setToolActive(PlanarRotateTool.toolName, {
+    bindings: [
+      {
+        mouseButton: csToolsEnums.MouseBindings.Wheel, // Shift Wheel Mouse
+        modifierKey: csToolsEnums.KeyboardBindings.Shift,
+      },
+      {
+        mouseButton: csToolsEnums.MouseBindings.Wheel_Primary, // Left Click+Wheel Mouse
+      },
+    ],
+  });
+
   viewportInputs[volumeId].push(viewportInput);
 
   const allInputs = Object.values(viewportInputs).reduce((arr, curr) => {
@@ -157,5 +227,8 @@ export const setViewPort = async (state: Partial<MedTechPanelState>, viewportInp
   engine.setViewports(allInputs);
 
   await setVolumesForViewports(engine, [{ volumeId }], filteredInputIds);
+
+  toolGroup!.addViewport(viewportId, RENDERING_ENGINE_ID);
+
   engine.renderViewport(viewportId);
 };

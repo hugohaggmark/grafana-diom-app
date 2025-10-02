@@ -18,11 +18,11 @@ export function CornerStonePanel(state: Partial<MedTechPanelState>) {
   const { error, loading } = useCornerStone(element.current, state, onRun);
 
   useEffect(() => {
-    function imageLoadErrorCallback(event: any) {
+    function imageLoadErrorCallback() {
       setImageLoadError(true);
     }
 
-    function volumeLoadedFailedCallback(event: any) {
+    function volumeLoadedFailedCallback() {
       setVolumeLoadedFailed(true);
     }
 

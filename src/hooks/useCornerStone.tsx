@@ -68,6 +68,7 @@ export function useCornerStone(
       return;
     }
 
+    element.oncontextmenu = (e) => e.preventDefault();
     const instances = await getInstances(state.apiUrl, studyInstanceUID, seriesInstanceUID);
 
     if (!instances?.length) {
