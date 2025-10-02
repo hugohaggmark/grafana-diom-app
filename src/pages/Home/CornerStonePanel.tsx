@@ -43,13 +43,15 @@ export function CornerStonePanel(state: Partial<MedTechPanelState>) {
 
   return (
     <>
-      <Stack width="100%" height="100%" direction={'column'}>
-        {(loading || volumeLoading) && !error && <LoadingPlaceholder text="Loading DICOM..." />}
-        {error && <Alert title="Something went wrong">{error}</Alert>}
-        {imageLoadError && <Alert title="Could not load image">Image load error</Alert>}
-        {volumeLoadedFailed && <Alert title="Could not load volume">Volume load failed</Alert>}
-        <div ref={element} style={{ height: '100%', width: '100%' }} />
-      </Stack>
+      <div style={{ width: '100%', height: '100%', margin: '4px' }}>
+        <Stack width="100%" height="100%" direction={'column'}>
+          {(loading || volumeLoading) && !error && <LoadingPlaceholder text="Loading DICOM..." />}
+          {error && <Alert title="Something went wrong">{error}</Alert>}
+          {imageLoadError && <Alert title="Could not load image">Image load error</Alert>}
+          {volumeLoadedFailed && <Alert title="Could not load volume">Volume load failed</Alert>}
+          <div ref={element} style={{ height: '100%', width: '100%' }} />
+        </Stack>
+      </div>
     </>
   );
 }
