@@ -8,23 +8,23 @@ export function homeScene(apiUrl = 'https://d14fa38qiwhyfd.cloudfront.net/dicomw
   const medtechPanel = new MedTechPanel({});
 
   const sub = dicomSelector.subscribeToState((newState) => {
-    if (!newState.state?.apiUrl) {
+    if (!newState.panelState?.apiUrl) {
       return;
     }
 
-    if (!newState.state?.studyInstanceUID) {
+    if (!newState.panelState?.studyInstanceUID) {
       return;
     }
 
-    if (!newState.state?.seriesInstanceUID) {
+    if (!newState.panelState?.seriesInstanceUID) {
       return;
     }
 
     medtechPanel.setState({
-      apiUrl: newState.state.apiUrl,
-      orientation: newState.state.orientation,
-      studyInstanceUID: newState.state.studyInstanceUID,
-      seriesInstanceUID: newState.state.seriesInstanceUID,
+      apiUrl: newState.panelState.apiUrl,
+      orientation: newState.panelState.orientation,
+      studyInstanceUID: newState.panelState.studyInstanceUID,
+      seriesInstanceUID: newState.panelState.seriesInstanceUID,
     });
 
     return () => {

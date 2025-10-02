@@ -16,7 +16,7 @@ import getPTImageIdInstanceMetadata from './getPTImageIdInstanceMetadata';
 import { calculateSUVScalingFactors } from '@cornerstonejs/calculate-suv';
 import ptScalingMetaDataProvider from './ptScalingMetaDataProvider';
 import { getWadoRsUrl } from 'utils/wadoRsUrl';
-import { MODALITY } from '../constants';
+import { MODALITY, SOP_INSTANCE_UID } from '../constants';
 const { DicomMetaDictionary } = dcmjs.data;
 const { calibratedPixelSpacingMetadataProvider, getPixelSpacingInformation } = utilities;
 
@@ -70,7 +70,7 @@ export const setViewPort = async (state: Partial<MedTechPanelState>, viewportInp
 
   const modality = instances[0][MODALITY]?.Value?.[0] || '';
   for (const instance of instances) {
-    const instanceUID = instance['00080018']?.Value?.[0];
+    const instanceUID = instance[SOP_INSTANCE_UID]?.Value?.[0];
     if (!instanceUID) {
       continue;
     }
