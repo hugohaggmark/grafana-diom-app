@@ -1,10 +1,11 @@
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useAsync } from 'react-use';
-import { Enums, eventTarget } from '@cornerstonejs/core';
+import { cache, Enums, eventTarget } from '@cornerstonejs/core';
 import { MedTechPanelState } from 'types';
 import { SceneComponentProps, SceneObjectBase } from '@grafana/scenes';
 import { setViewPort } from 'vendor/cornerstone';
 import { Alert, ErrorBoundary, ErrorWithStack, LoadingPlaceholder, Stack } from '@grafana/ui';
+import { getInstances } from 'api/api';
 
 export class MedTechPanel extends SceneObjectBase<Partial<MedTechPanelState>> {
   static Component = MedTechPanelRenderer;
@@ -59,16 +60,13 @@ type UseCornerStoneResult = {
 function useCornerStone(
   element: HTMLDivElement | null,
   state: Partial<MedTechPanelState>,
-  setVolumeLoading: React.Dispatch<React.SetStateAction<boolean>>
+  onRun: () => void
 ): UseCornerStoneResult {
+  const { orientation, seriesInstanceUID, studyInstanceUID } = state;
+
   const asyncState = useAsync(async () => {
-    const { instances, orientation, seriesInstanceUID, studyInstanceUID } = state;
     if (!element) {
       return false;
-    }
-
-    if (!instances?.length) {
-      return;
     }
 
     if (!seriesInstanceUID) {
@@ -83,10 +81,16 @@ function useCornerStone(
       return;
     }
 
-    setVolumeLoading(true);
-    await run(element, state);
+    const instances = await getInstances(state.apiUrl, studyInstanceUID, seriesInstanceUID);
+
+    if (!instances?.length) {
+      return;
+    }
+
+    onRun();
+    await run(element, { ...state, instances });
     return true;
-  }, [element, state]);
+  }, [element, orientation, seriesInstanceUID, studyInstanceUID]);
 
   return {
     ok: asyncState.value || false,
@@ -97,22 +101,52 @@ function useCornerStone(
 
 function CornerStonePanel({ model }: SceneComponentProps<MedTechPanel>) {
   const [volumeLoading, setVolumeLoading] = useState(false);
+  const [imageLoadError, setImageLoadError] = useState(false);
+  const [volumeLoadedFailed, setVolumeLoadedFailed] = useState(false);
   const state = model.useState();
   const element = useRef<HTMLDivElement>(null);
-  const { error, loading } = useCornerStone(element.current, state, setVolumeLoading);
+  const onRun = useCallback(() => {
+    setVolumeLoading(true);
+    setImageLoadError(false);
+    setVolumeLoadedFailed(false);
+  }, []);
 
-  function callback() {
-    setVolumeLoading(false);
-    eventTarget.removeEventListener(Enums.Events.IMAGE_VOLUME_LOADING_COMPLETED, callback);
-  }
+  const { error, loading } = useCornerStone(element.current, state, onRun);
 
-  eventTarget.addEventListener(Enums.Events.IMAGE_VOLUME_LOADING_COMPLETED, callback);
+  useEffect(() => {
+    function imageLoadErrorCallback(event: any) {
+      console.log('imageLoadErrorCallback', event);
+      setImageLoadError(true);
+    }
+
+    function volumeLoadedFailedCallback(event: any) {
+      console.log('volumeLoadedFailedCallback', event);
+      cache.purgeVolumeCache();
+      setVolumeLoadedFailed(true);
+    }
+
+    function callback() {
+      setVolumeLoading(false);
+    }
+
+    eventTarget.addEventListener(Enums.Events.IMAGE_LOAD_ERROR, imageLoadErrorCallback);
+    eventTarget.addEventListener(Enums.Events.IMAGE_VOLUME_LOADING_COMPLETED, callback);
+    eventTarget.addEventListener(Enums.Events.VOLUME_LOADED_FAILED, volumeLoadedFailedCallback);
+
+    return () => {
+      eventTarget.removeEventListener(Enums.Events.IMAGE_VOLUME_LOADING_COMPLETED, callback);
+      eventTarget.removeEventListener(Enums.Events.IMAGE_LOAD_ERROR, imageLoadErrorCallback);
+      eventTarget.removeEventListener(Enums.Events.VOLUME_LOADED_FAILED, volumeLoadedFailedCallback);
+    };
+  }, []);
 
   return (
     <>
       <Stack width="100%" height="100%" direction={'column'}>
         {(loading || volumeLoading) && <LoadingPlaceholder text="Loading DICOM..." />}
         {error && <Alert title="Something went wrong">{error}</Alert>}
+        {imageLoadError && <Alert title="Could not load image">Image load error</Alert>}
+        {volumeLoadedFailed && <Alert title="Could not load volume">Volume load failed</Alert>}
         <div ref={element} style={{ height: '100%', width: '100%' }} />
       </Stack>
     </>

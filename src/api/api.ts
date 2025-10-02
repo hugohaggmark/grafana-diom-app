@@ -65,11 +65,15 @@ export const getSeries = async (url: string, studyInstanceUID: string): Promise<
 // };
 
 export const getInstances = async (
-  apiUrl: string,
+  apiUrl: string | undefined,
   studyInstanceUID: string,
   seriesInstanceUID: string
 ): Promise<Instance[]> => {
   try {
+    if (!apiUrl) {
+      return [];
+    }
+
     const response = await fetch(`${apiUrl}/studies/${studyInstanceUID}/series/${seriesInstanceUID}/metadata`);
     const data = (await response.json()) as Instance[];
     return data || [];

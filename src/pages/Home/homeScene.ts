@@ -12,10 +12,6 @@ export function homeScene(apiUrl = 'https://d14fa38qiwhyfd.cloudfront.net/dicomw
       return;
     }
 
-    if (!newState.state?.instances?.length) {
-      return;
-    }
-
     if (!newState.state?.studyInstanceUID) {
       return;
     }
@@ -26,7 +22,6 @@ export function homeScene(apiUrl = 'https://d14fa38qiwhyfd.cloudfront.net/dicomw
 
     medtechPanel.setState({
       apiUrl: newState.state.apiUrl,
-      instances: newState.state.instances,
       orientation: newState.state.orientation,
       studyInstanceUID: newState.state.studyInstanceUID,
       seriesInstanceUID: newState.state.seriesInstanceUID,

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { useAsync } from 'react-use';
 import { SceneComponentProps, SceneObjectBase, SceneObjectState } from '@grafana/scenes';
 import { Alert, Combobox, InlineField, Stack } from '@grafana/ui';
@@ -31,7 +31,7 @@ type UseSeriesResult = {
   error: string | null;
 };
 
-export function useSeries(url: string, studyInstanceUID: string | null): UseSeriesResult {
+export function useSeries(url: string, studyInstanceUID: string | null | undefined): UseSeriesResult {
   const asyncState = useAsync(async () => {
     if (!studyInstanceUID) {
       return [];
@@ -73,8 +73,8 @@ type UseSInstancesResult = {
 
 export function useInstances(
   url: string,
-  studyInstanceUID: string | null,
-  seriesInstanceUID: string | null
+  studyInstanceUID: string | null | undefined,
+  seriesInstanceUID: string | null | undefined
 ): UseSInstancesResult {
   const asyncState = useAsync(async () => {
     if (!studyInstanceUID) {
@@ -97,6 +97,8 @@ export function useInstances(
 
 function CustomSceneObjectRenderer({ model }: SceneComponentProps<DICOMSelector>) {
   const state = model.useState();
+  console.log('CustomSceneObjectRenderer', { state: state.state });
+  const { studyInstanceUID } = state.state || {};
   const { error, loading, studies } = useStudies(state.apiUrl);
   const options = useMemo(
     () =>
@@ -110,7 +112,6 @@ function CustomSceneObjectRenderer({ model }: SceneComponentProps<DICOMSelector>
         .filter((s) => Boolean(s.label) && Boolean(s.value)),
     [studies]
   );
-  const [studyInstanceUID, setStudyInstanceUID] = useState<string | null>(null);
   const { error: seriesError, loading: seriesLoading, series } = useSeries(state.apiUrl, studyInstanceUID);
   const seriesOptions = useMemo(
     () =>
@@ -123,41 +124,42 @@ function CustomSceneObjectRenderer({ model }: SceneComponentProps<DICOMSelector>
         .filter((s) => Boolean(s.label) && Boolean(s.value)),
     [series]
   );
-  const [seriesInstanceUID, setSeriesInstanceUID] = useState<string | null>(null);
-  const {
-    error: instancesError,
-    loading: instancesLoading,
-    instances,
-  } = useInstances(state.apiUrl, studyInstanceUID, seriesInstanceUID);
 
-  useEffect(() => {
-    if (!studyInstanceUID || !seriesInstanceUID || instancesLoading || !instances.length) {
-      return;
-    }
-    model.onInstanceChange({
-      apiUrl: state.apiUrl,
-      instances,
-      orientation: 'axial',
-      studyInstanceUID,
-      seriesInstanceUID,
-    });
-  }, [model, instances, instancesLoading, studyInstanceUID, seriesInstanceUID, state.apiUrl]);
-
-  if (error || seriesError || instancesError) {
-    <Alert title="Something went wrong">{error || seriesError || instancesError}</Alert>;
+  if (error || seriesError) {
+    <Alert title="Something went wrong">{error || seriesError}</Alert>;
   }
 
   return (
     <>
       <Stack>
         <InlineField label="Study">
-          <Combobox loading={loading} options={options} onChange={(option) => setStudyInstanceUID(option.value)} />
+          <Combobox
+            loading={loading}
+            options={options}
+            onChange={(option) => {
+              model.onInstanceChange({
+                orientation: state.state?.orientation || 'axial',
+                apiUrl: state.apiUrl,
+                instances: [],
+                seriesInstanceUID: null,
+                studyInstanceUID: option.value,
+              });
+            }}
+          />
         </InlineField>
         <InlineField label="Series">
           <Combobox
             loading={seriesLoading}
             options={seriesOptions}
-            onChange={(option) => setSeriesInstanceUID(option.value)}
+            onChange={(option) => {
+              model.onInstanceChange({
+                orientation: state.state?.orientation || 'axial',
+                apiUrl: state.apiUrl,
+                instances: [],
+                seriesInstanceUID: option.value,
+                studyInstanceUID: state.state?.studyInstanceUID || null,
+              });
+            }}
           />
         </InlineField>
       </Stack>

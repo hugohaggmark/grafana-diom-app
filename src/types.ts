@@ -29,9 +29,9 @@ export interface Instance {
 }
 
 export interface MedTechPanelState extends SceneObjectState {
-  apiUrl: string;
-  studyInstanceUID: string;
-  seriesInstanceUID: string;
+  apiUrl?: string;
+  studyInstanceUID?: string | null;
+  seriesInstanceUID?: string | null;
   instances: Instance[];
   orientation: 'axial' | 'coronal' | 'sagittal';
 }
