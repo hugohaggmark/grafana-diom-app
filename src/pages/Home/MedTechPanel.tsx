@@ -19,9 +19,7 @@ function MedTechPanelRenderer({ model }: SceneComponentProps<MedTechPanel>) {
 
         return (
           <>
-            <CornerStonePanel {...state} orientation="axial" />
-            <CornerStonePanel {...state} orientation="sagittal" />
-            <CornerStonePanel {...state} orientation="coronal" />
+            <CornerStonePanel {...state} />
           </>
         );
       }}

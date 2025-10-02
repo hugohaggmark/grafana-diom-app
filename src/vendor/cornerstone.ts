@@ -19,16 +19,8 @@ import { getWadoRsUrl } from 'utils/wadoRsUrl';
 import { MODALITY, SOP_INSTANCE_UID } from '../constants';
 const { DicomMetaDictionary } = dcmjs.data;
 const { calibratedPixelSpacingMetadataProvider, getPixelSpacingInformation } = utilities;
-import * as cornerstoneTools from '@cornerstonejs/tools';
-const {
-  PanTool,
-  WindowLevelTool,
-  StackScrollTool,
-  ZoomTool,
-  PlanarRotateTool,
-  ToolGroupManager,
-  Enums: csToolsEnums,
-} = cornerstoneTools;
+// import * as cornerstoneTools from '@cornerstonejs/tools';
+//const { PanTool, WindowLevelTool, StackScrollTool, ZoomTool, PlanarRotateTool } = cornerstoneTools;
 
 const RENDERING_ENGINE_ID = 'grafana-health-dicom-engine';
 let renderingEngine: RenderingEngine | null = null;
@@ -42,12 +34,12 @@ const init = async (): Promise<RenderingEngine> => {
   promise = new Promise(async (resolve) => {
     await coreInit();
     await dicomImageLoaderInit();
-    await cornerstoneTools.init();
-    cornerstoneTools.addTool(PanTool);
-    cornerstoneTools.addTool(WindowLevelTool);
-    cornerstoneTools.addTool(StackScrollTool);
-    cornerstoneTools.addTool(ZoomTool);
-    cornerstoneTools.addTool(PlanarRotateTool);
+    // await cornerstoneTools.init();
+    // cornerstoneTools.addTool(PanTool);
+    // cornerstoneTools.addTool(WindowLevelTool);
+    // cornerstoneTools.addTool(StackScrollTool);
+    // cornerstoneTools.addTool(ZoomTool);
+    // cornerstoneTools.addTool(PlanarRotateTool);
 
     renderingEngine = new RenderingEngine(RENDERING_ENGINE_ID);
     resolve(renderingEngine);
@@ -163,59 +155,59 @@ export const setViewPort = async (state: Partial<MedTechPanelState>, viewportInp
     volume.load();
   }
 
-  let toolGroup = ToolGroupManager.getToolGroupForViewport(viewportId);
-  if (!toolGroup) {
-    toolGroup = ToolGroupManager.createToolGroup(viewportId);
-  }
+  // let toolGroup = ToolGroupManager.getToolGroupForViewport(viewportId);
+  // if (!toolGroup) {
+  //   toolGroup = ToolGroupManager.createToolGroup(viewportId);
+  // }
 
-  toolGroup!.addTool(WindowLevelTool.toolName);
-  toolGroup!.addTool(PanTool.toolName);
-  toolGroup!.addTool(ZoomTool.toolName);
-  toolGroup!.addTool(StackScrollTool.toolName, { loop: false });
-  toolGroup!.addTool(PlanarRotateTool.toolName);
+  // toolGroup!.addTool(WindowLevelTool.toolName);
+  // toolGroup!.addTool(PanTool.toolName);
+  // toolGroup!.addTool(ZoomTool.toolName);
+  // toolGroup!.addTool(StackScrollTool.toolName, { loop: false });
+  // toolGroup!.addTool(PlanarRotateTool.toolName);
 
-  toolGroup!.setToolActive(WindowLevelTool.toolName, {
-    bindings: [
-      {
-        mouseButton: csToolsEnums.MouseBindings.Primary, // Left Click
-      },
-    ],
-  });
-  toolGroup!.setToolActive(PanTool.toolName, {
-    bindings: [
-      {
-        mouseButton: csToolsEnums.MouseBindings.Auxiliary, // Middle Click
-      },
-    ],
-  });
-  toolGroup!.setToolActive(ZoomTool.toolName, {
-    bindings: [
-      {
-        mouseButton: csToolsEnums.MouseBindings.Secondary, // Right Click
-      },
-    ],
-  });
+  // toolGroup!.setToolActive(WindowLevelTool.toolName, {
+  //   bindings: [
+  //     {
+  //       mouseButton: csToolsEnums.MouseBindings.Primary, // Left Click
+  //     },
+  //   ],
+  // });
+  // toolGroup!.setToolActive(PanTool.toolName, {
+  //   bindings: [
+  //     {
+  //       mouseButton: csToolsEnums.MouseBindings.Auxiliary, // Middle Click
+  //     },
+  //   ],
+  // });
+  // toolGroup!.setToolActive(ZoomTool.toolName, {
+  //   bindings: [
+  //     {
+  //       mouseButton: csToolsEnums.MouseBindings.Secondary, // Right Click
+  //     },
+  //   ],
+  // });
 
-  // The Stack Scroll mouse wheel is a tool using the `mouseWheelCallback`
-  // and needs to be registered against the 'Wheel' binding.
-  toolGroup!.setToolActive(StackScrollTool.toolName, {
-    bindings: [
-      {
-        mouseButton: csToolsEnums.MouseBindings.Wheel, // Wheel Mouse
-      },
-    ],
-  });
-  toolGroup!.setToolActive(PlanarRotateTool.toolName, {
-    bindings: [
-      {
-        mouseButton: csToolsEnums.MouseBindings.Wheel, // Shift Wheel Mouse
-        modifierKey: csToolsEnums.KeyboardBindings.Shift,
-      },
-      {
-        mouseButton: csToolsEnums.MouseBindings.Wheel_Primary, // Left Click+Wheel Mouse
-      },
-    ],
-  });
+  // // The Stack Scroll mouse wheel is a tool using the `mouseWheelCallback`
+  // // and needs to be registered against the 'Wheel' binding.
+  // toolGroup!.setToolActive(StackScrollTool.toolName, {
+  //   bindings: [
+  //     {
+  //       mouseButton: csToolsEnums.MouseBindings.Wheel, // Wheel Mouse
+  //     },
+  //   ],
+  // });
+  // toolGroup!.setToolActive(PlanarRotateTool.toolName, {
+  //   bindings: [
+  //     {
+  //       mouseButton: csToolsEnums.MouseBindings.Wheel, // Shift Wheel Mouse
+  //       modifierKey: csToolsEnums.KeyboardBindings.Shift,
+  //     },
+  //     {
+  //       mouseButton: csToolsEnums.MouseBindings.Wheel_Primary, // Left Click+Wheel Mouse
+  //     },
+  //   ],
+  // });
 
   viewportInputs[volumeId].push(viewportInput);
 
@@ -228,7 +220,7 @@ export const setViewPort = async (state: Partial<MedTechPanelState>, viewportInp
 
   await setVolumesForViewports(engine, [{ volumeId }], filteredInputIds);
 
-  toolGroup!.addViewport(viewportId, RENDERING_ENGINE_ID);
+  //toolGroup!.addViewport(viewportId, RENDERING_ENGINE_ID);
 
   engine.renderViewport(viewportId);
 };

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { eventTarget, Enums } from '@cornerstonejs/core';
+import { usePreviousDistinct } from 'react-use';
+import { eventTarget, Enums, cache } from '@cornerstonejs/core';
 import { Stack, LoadingPlaceholder, Alert } from '@grafana/ui';
 import { useCornerStone } from 'hooks/useCornerStone';
 import { MedTechPanelState } from '../../types';
@@ -8,21 +9,27 @@ export function CornerStonePanel(state: Partial<MedTechPanelState>) {
   const [volumeLoading, setVolumeLoading] = useState(false);
   const [imageLoadError, setImageLoadError] = useState(false);
   const [volumeLoadedFailed, setVolumeLoadedFailed] = useState(false);
+  const previousOrientation = usePreviousDistinct(state.orientation);
   const element = useRef<HTMLDivElement>(null);
   const onRun = useCallback(() => {
+    if (previousOrientation !== state.orientation && previousOrientation !== undefined) {
+      return;
+    }
     setVolumeLoading(true);
     setImageLoadError(false);
     setVolumeLoadedFailed(false);
-  }, []);
+  }, [previousOrientation, state.orientation]);
 
   const { error, loading } = useCornerStone(element.current, state, onRun);
 
   useEffect(() => {
-    function imageLoadErrorCallback() {
+    function imageLoadErrorCallback(event: any) {
+      cache.removeImageLoadObject(event.detail.imageId);
       setImageLoadError(true);
     }
 
-    function volumeLoadedFailedCallback() {
+    function volumeLoadedFailedCallback(event: any) {
+      cache.removeVolumeLoadObject(event.detail.volumeId);
       setVolumeLoadedFailed(true);
     }
 

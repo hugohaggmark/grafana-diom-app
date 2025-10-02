@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { SceneComponentProps, SceneObjectBase, SceneObjectState } from '@grafana/scenes';
-import { Alert, Combobox, InlineField, Stack } from '@grafana/ui';
+import { Alert, Combobox, InlineField, RadioButtonGroup, Stack } from '@grafana/ui';
 import { MedTechPanelState } from 'types';
 import {
   SERIES_DESCRIPTION,
@@ -87,6 +87,23 @@ function CustomSceneObjectRenderer({ model }: SceneComponentProps<DICOMSelector>
                 instances: [],
                 seriesInstanceUID: option.value,
                 studyInstanceUID: state.panelState?.studyInstanceUID || null,
+              });
+            }}
+          />
+        </InlineField>
+        <InlineField label="Orientation">
+          <RadioButtonGroup
+            options={[
+              { label: 'Axial', value: 'axial' },
+              { label: 'Coronal', value: 'coronal' },
+              { label: 'Sagittal', value: 'sagittal' },
+            ]}
+            value={state.panelState?.orientation ?? 'axial'}
+            onChange={(value: MedTechPanelState['orientation']) => {
+              model.onInstanceChange({
+                ...state.panelState,
+                instances: state.panelState?.instances || [],
+                orientation: value,
               });
             }}
           />
