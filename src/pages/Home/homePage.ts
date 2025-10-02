@@ -4,10 +4,9 @@ import { prefixRoute } from '../../utils/utils.routing';
 import { ROUTES } from '../../constants';
 
 export const homePage = new SceneAppPage({
-  title: 'Home page',
+  title: 'DICOM',
   url: prefixRoute(ROUTES.Home),
   routePath: ROUTES.Home,
-  subTitle:
-    'This scene showcases a basic scene functionality, including query runner, variable and a custom scene object.',
+  subTitle: 'This app show cases DICOM abillities in Grafana',
   getScene: () => homeScene(),
 });
