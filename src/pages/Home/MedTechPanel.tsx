@@ -9,6 +9,7 @@ export class MedTechPanel extends SceneObjectBase<Partial<MedTechPanelState>> {
 }
 
 function MedTechPanelRenderer({ model }: SceneComponentProps<MedTechPanel>) {
+  const state = model.useState();
   return (
     <ErrorBoundary>
       {({ error, errorInfo }) => {
@@ -16,7 +17,13 @@ function MedTechPanelRenderer({ model }: SceneComponentProps<MedTechPanel>) {
           return <ErrorWithStack error={error} title="An unexpected error happened" errorInfo={errorInfo} />;
         }
 
-        return <CornerStonePanel model={model} />;
+        return (
+          <>
+            <CornerStonePanel {...state} orientation="axial" />
+            <CornerStonePanel {...state} orientation="sagittal" />
+            <CornerStonePanel {...state} orientation="coronal" />
+          </>
+        );
       }}
     </ErrorBoundary>
   );

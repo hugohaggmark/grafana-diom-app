@@ -1,15 +1,13 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { eventTarget, Enums } from '@cornerstonejs/core';
-import { SceneComponentProps } from '@grafana/scenes';
 import { Stack, LoadingPlaceholder, Alert } from '@grafana/ui';
-import { useCornerStone } from 'hooks/useCornerstone';
-import { MedTechPanel } from './MedTechPanel';
+import { useCornerStone } from 'hooks/useCornerStone';
+import { MedTechPanelState } from '../../types';
 
-export function CornerStonePanel({ model }: SceneComponentProps<MedTechPanel>) {
+export function CornerStonePanel(state: Partial<MedTechPanelState>) {
   const [volumeLoading, setVolumeLoading] = useState(false);
   const [imageLoadError, setImageLoadError] = useState(false);
   const [volumeLoadedFailed, setVolumeLoadedFailed] = useState(false);
-  const state = model.useState();
   const element = useRef<HTMLDivElement>(null);
   const onRun = useCallback(() => {
     setVolumeLoading(true);
